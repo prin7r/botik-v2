@@ -1,0 +1,57 @@
+# Production compose for botik.prin7r.com
+# Three services: web (Next.js), runtime (the agent supervisor), and the
+# Postgres + Redis we already operate on Dev 2. Traefik labels on the web
+# service match the wildcard *.prin7r.com cert on server 144.
+#
+# Bring it up:  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  web:
+    image: botik/web:latest
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      BOTIK_VAULT_KEY: ${BOTIK_VAULT_KEY}
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL}
+      SOLANA_USDT_MINT: ${SOLANA_USDT_MINT}
+      BOTIK_SOLANA_HOT_WALLET: ${BOTIK_SOLANA_HOT_WALLET}
+      PROVISIONER_HMAC_SECRET: ${PROVISIONER_HMAC_SECRET}
+      AGENT_RUNTIME_URL: http://runtime:18789
+      SEARXNG_URL: ${SEARXNG_URL}
+      FIRECRAWL_URL: ${FIRECRAWL_URL}
+      BOTIK_TRIAL_DAYS: ${BOTIK_TRIAL_DAYS:-7}
+      BOTIK_DEFAULT_MODEL: ${BOTIK_DEFAULT_MODEL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    depends_on:
+      - runtime
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.botik-web.rule=Host(`botik.prin7r.com`)"
+      - "traefik.http.routers.botik-web.tls=true"
+      - "traefik.http.routers.botik-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.botik-web.loadbalancer.server.port=3000"
+
+  runtime:
+    image: botik/runtime:latest
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    restart: unless-stopped
+    environment:
+      PROVISIONER_HMAC_SECRET: ${PROVISIONER_HMAC_SECRET}
+      BOTIK_VAULT_KEY: ${BOTIK_VAULT_KEY}
+      SEARXNG_URL: ${SEARXNG_URL}
+      FIRECRAWL_URL: ${FIRECRAWL_URL}
+    volumes:
+      - /var/lib/botik/agents:/var/lib/botik/agents
+    # Single-host scaling: 0.5 vCPU + 256MB cap is more than enough; the
+    # supervisor itself is tiny (the per-user agents are separate processes).
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M

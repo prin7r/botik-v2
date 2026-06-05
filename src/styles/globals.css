@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 255 255 255;
+  --foreground: 9 9 11;
+  --muted: 244 244 245;
+  --muted-foreground: 82 82 91;
+  --border: 228 228 231;
+  --ring: 9 9 11;
+  --accent: 9 9 11;
+  --success: 22 163 74;
+  --warn: 202 138 4;
+  --danger: 220 38 38;
+}
+
+html,
+body {
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  border-color: rgb(var(--border));
+}
+
+::selection {
+  background: rgb(var(--foreground));
+  color: rgb(var(--background));
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-md border border-ink-200 bg-white px-4 py-2 text-sm font-medium text-ink-900 transition-colors hover:bg-ink-50 disabled:opacity-50 disabled:pointer-events-none;
+}
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-md bg-ink-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ink-800 disabled:opacity-50 disabled:pointer-events-none;
+}
+.btn-ghost {
+  @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-100;
+}
+.card {
+  @apply rounded-lg border border-ink-200 bg-white p-6 shadow-sm;
+}
+.input {
+  @apply block w-full rounded-md border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 shadow-sm placeholder:text-ink-400 focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900;
+}
+.label {
+  @apply mb-1 block text-sm font-medium text-ink-700;
+}
+.kbd {
+  @apply rounded border border-ink-200 bg-ink-50 px-1.5 py-0.5 text-[11px] font-mono text-ink-700;
+}
+.pulse-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  background: rgb(var(--success));
+}
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: rgb(var(--success));
+  opacity: 0.4;
+  animation: pulseRing 2.4s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+@keyframes pulseRing {
+  0% { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Lightweight code blocks in docs */
+pre {
+  @apply overflow-x-auto rounded-md border border-ink-200 bg-ink-50 px-3 py-2 text-sm;
+}
+code {
+  @apply font-mono text-[0.875em];
+}
+:not(pre) > code {
+  @apply rounded bg-ink-100 px-1 py-0.5;
+}
