@@ -89,7 +89,7 @@ export async function pollIncomingUsdt(
       const delta = postAmt - preAmt;
       if (delta < REQUIRED_AMOUNT_USD) continue;
       // 2) Find the memo
-      const memo = extractMemo(tx);
+      const memo = extractMemo(tx as unknown as Parameters<typeof extractMemo>[0]);
       if (!memo) continue;
       out.push({
         signature: s.signature,
