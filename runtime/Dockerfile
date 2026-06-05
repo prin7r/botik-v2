@@ -3,15 +3,11 @@
 FROM node:24-alpine
 WORKDIR /app
 
-# Install production deps for the web + runtime. We pull in the
-# entire repo (small, monorepo) and run the supervisor with tsx.
+# Install production deps (libsec + tsx). We use `npm install` not `npm ci`
+# because the lockfile was generated with a different Node version.
 RUN apk add --no-cache openssl
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev --no-audit --no-fund
-
-# Copy the runtime source and tsx (dev dep, needed to run TS files)
-COPY package.json package-lock.json* ./
-RUN npm install --save-dev tsx --no-audit --no-fund
+RUN npm install --no-audit --no-fund --legacy-peer-deps
 
 # Copy the source we need
 COPY src ./src
