@@ -107,14 +107,10 @@ export async function pollIncomingUsdt(
   return out;
 }
 
-function extractMemo(tx: {
-  transaction: {
-    message: { instructions: Array<{ parsed?: unknown; program?: string }> };
-  };
-}): string | null {
-  const ixs = tx.transaction.message.instructions;
+function extractMemo(tx: { transaction: { message: { instructions: unknown[] } } }): string | null {
+  const ixs = tx.transaction.message.instructions as Array<{ program?: string; parsed?: unknown }>;
   for (const ix of ixs) {
-    if (ix.program === 'spl-memo' && typeof (ix.parsed as string) === 'string') {
+    if (ix.program === 'spl-memo' && typeof ix.parsed === 'string') {
       return (ix.parsed as string).trim();
     }
   }
