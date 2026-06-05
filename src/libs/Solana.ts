@@ -89,7 +89,7 @@ export async function pollIncomingUsdt(
       const delta = postAmt - preAmt;
       if (delta < REQUIRED_AMOUNT_USD) continue;
       // 2) Find the memo
-      const memo = extractMemo(tx as unknown as Parameters<typeof extractMemo>[0]);
+      const memo = extractMemo(tx);
       if (!memo) continue;
       out.push({
         signature: s.signature,
@@ -107,8 +107,11 @@ export async function pollIncomingUsdt(
   return out;
 }
 
-function extractMemo(tx: { transaction: { message: { instructions: unknown[] } } }): string | null {
-  const ixs = tx.transaction.message.instructions as Array<{ program?: string; parsed?: unknown }>;
+// Pull memo out of a transaction. The Solana web3 type union is
+// (ParsedInstruction | PartiallyDecodedInstruction) — we only read `program`
+// and `parsed` which both shapes support, so we accept `any` here.
+function extractMemo(tx: any): string | null {
+  const ixs: Array<{ program?: string; parsed?: unknown }> = tx?.transaction?.message?.instructions ?? [];
   for (const ix of ixs) {
     if (ix.program === 'spl-memo' && typeof ix.parsed === 'string') {
       return (ix.parsed as string).trim();
