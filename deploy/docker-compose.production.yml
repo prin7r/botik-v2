@@ -1,0 +1,63 @@
+# Production compose for server 144.
+# - web: Next.js standalone build, Traefik labels for botik-v2.prin7r.com
+# - runtime: agent supervisor (HMAC-signed child-process manager)
+# - postgres: shared instance (paperclip-db) on the same host
+#
+# All env is in /etc/dokploy/compose/botik-v2/.env (mode 600).
+# Bring up:   docker compose -f docker-compose.production.yml up -d --build
+# Tail logs:  docker compose -f docker-compose.production.yml logs -f web
+services:
+  web:
+    build:
+      context: /opt/botik-v2
+      dockerfile: apps/web/Dockerfile
+    image: botik-v2/web:latest
+    container_name: botik-v2-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    expose:
+      - "3000"
+    networks:
+      - traefik
+      - botik
+    depends_on:
+      - runtime
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.botik-v2-web.rule=Host(`botik-v2.prin7r.com`) || Host(`botik-v2.prin7r.com`)"
+      - "traefik.http.routers.botik-v2-web.entrypoints=websecure"
+      - "traefik.http.routers.botik-v2-web.tls=true"
+      - "traefik.http.routers.botik-v2-web.tls.certresolver=letsencrypt"
+      - "traefik.http.services.botik-v2-web.loadbalancer.server.port=3000"
+
+  runtime:
+    build:
+      context: /opt/botik-v2
+      dockerfile: runtime/Dockerfile
+    image: botik-v2/runtime:latest
+    container_name: botik-v2-runtime
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - RUNTIME_HOST=0.0.0.0
+      - RUNTIME_PORT=18789
+      - BOTIK_WORKSPACE_DIR=/var/lib/botik/agents
+    volumes:
+      - /var/lib/botik:/var/lib/botik
+    expose:
+      - "18789"
+    networks:
+      - botik
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  traefik:
+    external: true
+  botik:
+    driver: bridge
