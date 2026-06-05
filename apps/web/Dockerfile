@@ -4,12 +4,13 @@ FROM node:24-alpine AS deps
 WORKDIR /app
 # Copy lock and manifest from the repo root (build context)
 COPY package.json package-lock.json* ./
-RUN npm ci --no-audit --no-fund
+# Use `npm install` not `npm ci` because the lockfile was generated with a
+# different Node version than the build image; `ci` would refuse.
+RUN npm install --no-audit --no-fund --legacy-peer-deps
 
 FROM node:24-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-# Copy the whole monorepo — Next builds only what apps/web imports
 COPY . .
 RUN cd apps/web && npm run build
 
@@ -18,8 +19,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
-# The standalone output is under apps/web/.next/standalone, not /app/.next/standalone.
-# Standalone bundles node_modules and the entry file. Copy from there.
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
