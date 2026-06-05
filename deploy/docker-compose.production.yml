@@ -10,7 +10,7 @@ services:
   web:
     build:
       context: /opt/botik-v2
-      dockerfile: apps/web/Dockerfile
+      dockerfile: Dockerfile
     image: botik-v2/web:latest
     container_name: botik-v2-web
     restart: unless-stopped
