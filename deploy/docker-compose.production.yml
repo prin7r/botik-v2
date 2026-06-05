@@ -17,7 +17,7 @@ services:
     env_file:
       - .env
     expose:
-      - "3000"
+      - "3001"   # alphaclaw already owns 3000 on this host
     networks:
       - traefik
       - botik
@@ -29,7 +29,7 @@ services:
       - "traefik.http.routers.botik-v2-web.entrypoints=websecure"
       - "traefik.http.routers.botik-v2-web.tls=true"
       - "traefik.http.routers.botik-v2-web.tls.certresolver=letsencrypt"
-      - "traefik.http.services.botik-v2-web.loadbalancer.server.port=3000"
+      - "traefik.http.services.botik-v2-web.loadbalancer.server.port=3001"
 
   runtime:
     build:
