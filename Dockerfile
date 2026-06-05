@@ -12,6 +12,10 @@ FROM node:24-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Build-time we have no .env; the route handlers import Env.ts which
+# would normally throw. SKIP_ENV_VALIDATION turns that off.
+ENV SKIP_ENV_VALIDATION=true
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM node:24-alpine AS runner
