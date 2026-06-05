@@ -5,7 +5,7 @@ import { cookies, headers } from 'next/headers';
 import { eq, and, gt } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 import { db } from '@/libs/DB';
-import { sessions, users } from '@/models/Schema';
+import { sessions, users, type User } from '@/models/Schema';
 
 export const SESSION_COOKIE = 'botik_session';
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
@@ -76,13 +76,15 @@ export async function getCurrentUser() {
   return rows[0]?.user ?? null;
 }
 
-/** Strict variant — throws Next.js notFound() style redirect to /login. */
-export async function requireUser() {
+/** Strict variant — calls Next.js redirect() to /login if no session. */
+export async function requireUser(): Promise<User> {
   const user = await getCurrentUser();
   if (!user) {
     // Lazy import to avoid edge issues
     const { redirect } = await import('next/navigation');
     redirect('/login');
+    // Unreachable: redirect() throws, but TS needs a return.
+    throw new Error('unreachable');
   }
   return user;
 }
